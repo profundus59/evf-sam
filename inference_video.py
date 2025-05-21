@@ -10,12 +10,12 @@ from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoTokenizer, BitsAndBytesConfig
 from model.segment_anything.utils.transforms import ResizeLongestSide
-
+import ipdb
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="EVF infer")
     parser.add_argument("--version", required=True)
-    parser.add_argument("--vis_save_path", default="./infer", type=str)
+    parser.add_argument("--vis_save_path", default="./outputs/infer_video", type=str)
     parser.add_argument(
         "--precision",
         default="fp16",
@@ -54,7 +54,7 @@ def init_models(args):
         padding_side="right",
         use_fast=False,
     )
-
+    # ipdb.set_trace()
     torch_dtype = torch.float32
     if args.precision == "bf16":
         torch_dtype = torch.bfloat16
@@ -113,6 +113,9 @@ def main(args):
     if not os.path.exists(image_path):
         print("File not found in {}".format(image_path))
         exit()
+    if not isinstance(image_path, str) and os.path.isdir(image_path):
+        print("Path has to be a folder path, check again.")
+        exit()
     prompt = args.prompt
 
     os.makedirs(args.vis_save_path, exist_ok=True)
@@ -120,22 +123,30 @@ def main(args):
     # initialize model and tokenizer
     tokenizer, model = init_models(args)
 
-    # preprocess    
-    image_np = cv2.imread(image_path+"/00000.jpg")
-    image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-    # original_size_list = [image_np.shape[:2]]
+    # preprocess
+    files = os.listdir(image_path)
+    files.sort()
+    # ipdb.set_trace()
+    for i, file in enumerate(files):
+        file = os.path.join(image_path, file)
 
-    image_beit = beit3_preprocess(image_np, args.image_size).to(dtype=model.dtype, device=model.device)
+        image_np = cv2.imread(file) 
+        # ipdb.set_trace()
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+        # original_size_list = [image_np.shape[:2]]
 
-    input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(device=model.device)
-
+        image_beit = beit3_preprocess(image_np, args.image_size).to(dtype=model.dtype, device=model.device)
+        # ipdb.set_trace()
+        input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"].to(device=model.device)
+    ipdb.set_trace()
     # infer
     output = model.inference(
-        image_path,
+        image_path, 
         image_beit.unsqueeze(0),
         input_ids,
         # original_size_list=original_size_list,
     )
+
     # save visualization
     files = os.listdir(image_path)
     files.sort()

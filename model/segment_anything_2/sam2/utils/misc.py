@@ -179,14 +179,18 @@ def load_video_frames(
     if isinstance(video_path, str) and os.path.isdir(video_path):
         jpg_folder = video_path
     else:
-        raise NotImplementedError("Only JPEG frames are supported at this moment")
+        raise NotImplementedError("Path has to be a folder path, check again.")
 
     frame_names = [
         p
         for p in os.listdir(jpg_folder)
         if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]
     ]
-    frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
+
+    # import ipdb; ipdb.set_trace()
+    #FIXME: having issue with frame names
+    frame_names.sort()
+    # org code: frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
     num_frames = len(frame_names)
     if num_frames == 0:
         raise RuntimeError(f"no images found in {jpg_folder}")
