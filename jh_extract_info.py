@@ -51,14 +51,12 @@ if __name__ == "__main__":
         print(f"Processing {vid_subfolders[i]} with {expression_size} expressions.")
         
         # ipdb.set_trace()
-        # Create the output directory if it doesn't exist
-        # for j in range(expression_size):
         command = [
             bash_script,
             subvid_path,
-            str(expression_list),
+            str(expression_list), # take all the expressions from whole video
         ]
-
+        # ipdb.set_trace()
         try:
             result = subprocess.run(command, check=True, capture_output=True, text=True, encoding='utf-8')
             # ipdb.set_trace()
@@ -68,5 +66,5 @@ if __name__ == "__main__":
             print(f"Stderr:\n{e.stderr}")
             raise
         
-        # ipdb.set_trace()
+        ipdb.set_trace()
     print(f"Bash script executed successfully.")

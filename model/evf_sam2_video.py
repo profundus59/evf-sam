@@ -148,6 +148,7 @@ class EvfSam2Model(PreTrainedModel):
             images_evf,
             input_ids,
         ):
+        import ipdb; ipdb.set_trace()
         predictor = self.visual_model
         inference_state = predictor.init_state(video_path=video_path)
         predictor.reset_state(inference_state)

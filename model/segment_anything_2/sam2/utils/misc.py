@@ -188,7 +188,6 @@ def load_video_frames(
     ]
 
     # import ipdb; ipdb.set_trace()
-    #FIXME: having issue with frame names
     frame_names.sort()
     # org code: frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
     num_frames = len(frame_names)
