@@ -9,7 +9,7 @@ from .unilm.beit3.modeling_utils import BEiT3Wrapper, _get_base_config, _get_lar
 from .configuration_evf import EvfConfig
 from .segment_anything_2.sam2.utils.misc import load_video_frames
 from collections import OrderedDict
-
+import ipdb
 
 
 def dice_loss(
@@ -145,28 +145,44 @@ class EvfSam2Model(PreTrainedModel):
     def inference(
             self,
             video_path,
-            images_evf,
+            images_evf, # shape: (1, 3, 224, 224)
             input_ids,
+            current_frame_id,
+            obj_id
         ):
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         predictor = self.visual_model
         inference_state = predictor.init_state(video_path=video_path)
+
+        """
+        inference_state.keys():
+        dict_keys(['images', 'num_frames', 'offload_video_to_cpu', 'offload_state_to_cpu', 
+        'video_height', 'video_width', 'device', 'storage_device', 'point_inputs_per_obj', 'mask_inputs_per_obj',
+        'cached_features' >> cached_features, vision_features, vision_pos_enc,
+        'constants', 'obj_id_to_idx', 'obj_idx_to_id', 
+        'obj_ids', 'output_dict', 'output_dict_per_obj', 'temp_output_dict_per_obj', 
+        'consolidated_frame_inds', 'tracking_has_started', 'frames_already_tracked'])
+        """
+
         predictor.reset_state(inference_state)
 
         output = self.mm_extractor.beit3(visual_tokens=images_evf, textual_tokens=input_ids, text_padding_position=torch.zeros_like(input_ids))
-
+        # output keys:
+        # 'encoder_out', 'encoder_embedding', 'encoder_padding_mask', 'encoder_states', 'l_aux', 'multiway_split_position'
+        
         feat = output["encoder_out"][:, :1, ...]
         feat = self.text_hidden_fcs[0](feat)
 
-        ann_frame_idx = 0  # the frame index we interact with
-        ann_obj_id = 1  # give a unique id to each object we interact with (it can be any integers)
-
+        ann_frame_idx = current_frame_id # the frame index we interact with 
+        ann_obj_id = obj_id  #TODO: need to give a unique id to each object we interact with (it can be any integers)
+        
         _, out_obj_ids, out_mask_logits = predictor.add_new_text(
             inference_state=inference_state,
             frame_idx=ann_frame_idx,
             obj_id=ann_obj_id,
             text=feat
         )
+        ipdb.set_trace()
 
         # run propagation throughout the video and collect the results in a dict
         video_segments = {}  # video_segments contains the per-frame segmentation results
@@ -175,6 +191,7 @@ class EvfSam2Model(PreTrainedModel):
                 out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
                 for i, out_obj_id in enumerate(out_obj_ids)
             }
+        ipdb.set_trace()
 
         return video_segments
   

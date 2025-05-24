@@ -11,6 +11,10 @@ from torchvision.transforms.functional import InterpolationMode
 from transformers import AutoTokenizer, BitsAndBytesConfig
 from model.segment_anything.utils.transforms import ResizeLongestSide
 import ipdb
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="EVF infer")
@@ -110,6 +114,8 @@ def main(args):
 
     # clarify IO
     image_path = args.image_path # path of folder containing images
+    logging.info("image_path: {}".format(image_path))
+
     if not os.path.exists(image_path):
         print("File not found in {}".format(image_path))
         exit()
@@ -119,10 +125,19 @@ def main(args):
     # ipdb.set_trace()
     # Extract video name from image path
     video_name = os.path.basename(image_path)
+    logging.info("video_name: {}".format(video_name))
     
+    #TODO: need to make meta_data, which includes prompt and object_id
+    meta_data = {"object_id": None, "prompt": None}
+
+    # Get prompt
     prompt = args.prompt
-    # ipdb.set_trace()
+    logging.info("prompt: {}".format(prompt))    
     prompt = [p.strip() for p in prompt.split(",") if p.strip()]
+    
+    # Get object_id
+    
+
     prompt_num = len(prompt)
 
     os.makedirs(args.vis_save_path, exist_ok=True)
@@ -158,7 +173,8 @@ def main(args):
                 image_path, 
                 image_beit.unsqueeze(0),
                 input_ids,
-                # original_size_list=original_size_list,
+                i, # current frame number
+                object_id,
             )
             # output shape: 
             # output.get(frame numbers)[1].shape: (1, 480, 854)

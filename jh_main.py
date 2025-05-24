@@ -58,12 +58,25 @@ if __name__ == "__main__":
         expression_list, object_id_list, subvid_path, expression_size = extract_info(vid_subfolders[i], meta_file_path, vid_folder_path)
         print(f"Processing {vid_subfolders[i]} with {expression_size} expressions.")
         
-        ipdb.set_trace()
+        # Changing datatype for expression_list and object_id_list
+        object_num = len(object_id_list)
+        expression_list_string = ""
+        object_id_list_string = ""
+
+        for j in range(object_num):
+            if j == object_num - 1:
+                expression_list_string = expression_list_string + str(expression_list[j])
+                object_id_list_string = object_id_list_string + str(object_id_list[j])
+            else:            
+                expression_list_string = expression_list_string + str(expression_list[j]) + ", "
+                object_id_list_string = object_id_list_string + str(object_id_list[j]) + ", "
+
+        # ipdb.set_trace()
         command = [
             bash_script,
             subvid_path, # $1
-            str(expression_list), # $2
-            object_id_list # $3  
+            expression_list_string, # $2
+            object_id_list_string # $3  
         ]
         # ipdb.set_trace()
         try:
